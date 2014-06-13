@@ -4,8 +4,15 @@ using System.Collections;
 public class Manager : MonoBehaviour {
 
 	public GameObject[] pipesArray;
+	public GameObject pipeSelected;
 	public GameObject tileBackground;
 	public int rowsAndColumnsNumber;
+	public Turn whoseTurn = Turn.Player1;
+	public enum Turn{
+		Player1,
+		Player2
+	};
+
 	// Use this for initialization
 	void Start () 
 	{
