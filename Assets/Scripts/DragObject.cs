@@ -7,6 +7,7 @@ public class DragObject : MonoBehaviour {
 	Vector3 offset;
 	Color initialColor;
 	public bool locked = false;
+
 	// Use this for initialization
 	void Start () {
 		initialColor = this.renderer.material.color;
@@ -27,15 +28,49 @@ public class DragObject : MonoBehaviour {
 			}
 			else 
 			{
-				SwapPosition();
+                //2eme piece 
+                if (Camera.main.GetComponent<Manager>().whoseTurn == Manager.Turn.Player1)
+                {
+                    if (this.transform.position.y >= (Camera.main.GetComponent<Manager>().rowsAndColumnsNumber / 2) && this.transform.position.y < (Camera.main.GetComponent<Manager>().rowsAndColumnsNumber - 1))
+                    {
+
+                        SwapPosition();
+                    }
+                    else
+                    {
+                        Camera.main.GetComponent<Manager>().errorSelectionPiece.GetComponent<GUIText>().text = "Joueur 1, veuillez sélectionner \n une pièce de votre terrain !";
+                        StartCoroutine("DisplayError");
+                        //Debug.Log("[J1] ERREUR DE SELECTION DE PIECE, RETOUNER DS VOTRE RECTANGLE");
+                    }
+                }
+                else if (Camera.main.GetComponent<Manager>().whoseTurn == Manager.Turn.Player2)
+                {
+                    if (this.transform.position.y < (Camera.main.GetComponent<Manager>().rowsAndColumnsNumber / 2))
+                    {
+                        SwapPosition();
+                    }
+                    else
+                    {
+                        //Debug.Log("[J2] ERREUR DE SELECTION DE PIECE, RETOUNER DS VOTRE RECTANGLE");
+                        Camera.main.GetComponent<Manager>().errorSelectionPiece.GetComponent<GUIText>().text  = "Joueur 2, veuillez sélectionner \n une pièce de votre terrain !";
+                        StartCoroutine("DisplayError");
+                    }
+                }
 			}
 		}
 
 		Vector3 scanPos = gameObject.transform.position;
 		screenPoint = Camera.main.WorldToScreenPoint(scanPos);
 		offset = scanPos - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z));
-	}	
-	
+	}
+
+
+    IEnumerator DisplayError()
+    {
+        yield return new WaitForSeconds(2);
+        Camera.main.GetComponent<Manager>().errorSelectionPiece.GetComponent<GUIText>().text = "";
+    }
+
 	void OnMouseUp()
 	{
 //		this.renderer.material.color = initialColor;
@@ -62,13 +97,16 @@ public class DragObject : MonoBehaviour {
 		// CHANGE TURN PLAYER AND SET THE OBJECT COLOR FOR EACH PLAYER
 		if (Camera.main.GetComponent<Manager> ().whoseTurn == Manager.Turn.Player1) 
 		{
-			Camera.main.GetComponent<Manager> ().pipeSelected.renderer.material.color = Color.black;
+            
+			Camera.main.GetComponent<Manager> ().pipeSelected.renderer.material.color = Color.green;
 			Camera.main.GetComponent<Manager> ().whoseTurn = Manager.Turn.Player2;
+            Camera.main.GetComponent<Manager>().TurnPlayer();
 		}
 		else if (Camera.main.GetComponent<Manager> ().whoseTurn == Manager.Turn.Player2)
 		{
 			Camera.main.GetComponent<Manager> ().pipeSelected.renderer.material.color = Color.blue;
 			Camera.main.GetComponent<Manager> ().whoseTurn = Manager.Turn.Player1;
+            Camera.main.GetComponent<Manager>().TurnPlayer();
 		}
 		Camera.main.GetComponent<Manager> ().pipeSelected = null;
 	}
