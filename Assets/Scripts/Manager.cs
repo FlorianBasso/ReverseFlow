@@ -20,12 +20,10 @@ public class Manager : MonoBehaviour {
     public GameObject parent;
     public GameObject errorSelectionPiece;
 
-<<<<<<< HEAD
 	//ARRAY TRAIL RENDERER FOR EACH PLAYER
 	public ArrayList trailRendererPlayer1Array = new ArrayList();
 	public ArrayList trailRendererPlayer2Array = new ArrayList();
 	public GameObject trailRendererObject;
-=======
     public bool GameEnd = false;
 
     GameObject DepartJ1;
@@ -35,7 +33,6 @@ public class Manager : MonoBehaviour {
 
     public Dictionary<string, Piece> GameObjectDico = new Dictionary<string, Piece>();
 
->>>>>>> FETCH_HEAD
 
 	// Use this for initialization
 	void Start () 
@@ -157,14 +154,15 @@ public class Manager : MonoBehaviour {
 	//ADD TRAIL RENDERER OBJECT
 	void addTrailRenderer()
 	{
-		GameObject tempTrailRenderer = (GameObject)Instantiate(trailRendererObject, new Vector3(i, j, 0), Quaternion.identity);
 		if (whoseTurn == Turn.Player1) 
 		{
-			trailRendererPlayer1Array.Add(tempTrailRenderer);
+			GameObject tempTrailRenderer1 = (GameObject)Instantiate(trailRendererObject, new Vector3(DepartJ1.transform.position.x, DepartJ1.transform.position.y, 0), Quaternion.identity);
+			trailRendererPlayer1Array.Add(tempTrailRenderer1);
 		}
 		else
 		{
-			trailRendererPlayer2Array.Add(tempTrailRenderer);
+			GameObject tempTrailRenderer2 = (GameObject)Instantiate(trailRendererObject, new Vector3(DepartJ2.transform.position.x, DepartJ2.transform.position.y, 0), Quaternion.identity);
+			trailRendererPlayer2Array.Add(tempTrailRenderer2);
 		}
 	}
 }
