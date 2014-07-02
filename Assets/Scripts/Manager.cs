@@ -19,9 +19,17 @@ public class Manager : MonoBehaviour {
     public GameObject parent;
     public GameObject errorSelectionPiece;
 
+	//ARRAY TRAIL RENDERER FOR EACH PLAYER
+	public ArrayList trailRendererPlayer1Array = new ArrayList();
+	public ArrayList trailRendererPlayer2Array = new ArrayList();
+	public GameObject trailRendererObject;
+
 	// Use this for initialization
 	void Start () 
 	{
+		//CLear trail renderer for each player
+		trailRendererPlayer1Array.Clear();
+		trailRendererPlayer2Array.Clear();
 		GenerateGrid ();
         text.GetComponent<TextMesh>().text = whoseTurn.ToString();
 	}
@@ -87,6 +95,20 @@ public class Manager : MonoBehaviour {
                     }
                 }
 			}
+		}
+	}
+
+	//ADD TRAIL RENDERER OBJECT
+	void addTrailRenderer()
+	{
+		GameObject tempTrailRenderer = (GameObject)Instantiate(trailRendererObject, new Vector3(i, j, 0), Quaternion.identity);
+		if (whoseTurn == Turn.Player1) 
+		{
+			trailRendererPlayer1Array.Add(tempTrailRenderer);
+		}
+		else
+		{
+			trailRendererPlayer2Array.Add(tempTrailRenderer);
 		}
 	}
 }
