@@ -151,7 +151,7 @@ public class Manager : MonoBehaviour {
 		}
 	}
 
-	//ADD TRAIL RENDERER OBJECT
+	// TRAIL RENDERER MANAGEMENT
 	void addTrailRenderer()
 	{
 		if (whoseTurn == Turn.Player1) 
@@ -163,6 +163,20 @@ public class Manager : MonoBehaviour {
 		{
 			GameObject tempTrailRenderer2 = (GameObject)Instantiate(trailRendererObject, new Vector3(DepartJ2.transform.position.x, DepartJ2.transform.position.y, 0), Quaternion.identity);
 			trailRendererPlayer2Array.Add(tempTrailRenderer2);
+		}
+	}
+
+	void moveTrailRenderer(Vector3 newPosition, int pathIndex)
+	{
+		if (whoseTurn == Turn.Player1) 
+		{
+			GameObject aTrailRenderer = trailRendererPlayer1Array[pathIndex] as GameObject;
+			aTrailRenderer.transform.position = newPosition;
+		}
+		else
+		{
+			GameObject aTrailRenderer = trailRendererPlayer2Array[pathIndex] as GameObject;
+			aTrailRenderer.transform.position = newPosition;
 		}
 	}
 }
