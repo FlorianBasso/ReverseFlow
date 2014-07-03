@@ -17,8 +17,9 @@ public class Manager : MonoBehaviour {
 		Player2
 	};
     public GameObject text;
-    public GameObject parent;
+    //public GameObject parent;
     public GameObject errorSelectionPiece;
+    public GameObject endGame;
 
 	//ARRAY TRAIL RENDERER FOR EACH PLAYER
 	public ArrayList trailRendererPlayer1Array = new ArrayList();
@@ -31,9 +32,18 @@ public class Manager : MonoBehaviour {
     GameObject ArriveeJ1;
     GameObject ArriveeJ2;
 
+    GameObject pieces;
+    GameObject trails;
     public Dictionary<string, Piece> GameObjectDico = new Dictionary<string, Piece>();
 
+    public bool moving = false;
 
+    int nbTrail = 0;
+
+    //public bool validate = false;
+    //public bool cancel = false;
+
+    int nbPiece = 0;
 	// Use this for initialization
 	void Start () 
 	{
@@ -80,6 +90,12 @@ public class Manager : MonoBehaviour {
     }*/
 	void GenerateGrid()
 	{
+        GameObjectDico.Clear();
+        trailRendererPlayer2Array.Clear();
+        trailRendererPlayer1Array.Clear();
+        pieces = new GameObject("Pieces");
+        trails = new GameObject("Trails");
+
         //Generate Depart
         int numDepartPlayer1 = Random.Range((rowsAndColumnsNumber/2), rowsAndColumnsNumber);
         int numDepartPlayer2 = Random.Range(0, (rowsAndColumnsNumber / 2));
@@ -88,6 +104,8 @@ public class Manager : MonoBehaviour {
         DepartJ2 = (GameObject) Instantiate(depart, new Vector3(0, numDepartPlayer2, 0), Quaternion.identity);
         DepartJ1.name = "DepartJ1";
         DepartJ2.name = "DepartJ2";
+        DepartJ1.transform.parent = pieces.transform;
+        DepartJ2.transform.parent = pieces.transform;
 
         Piece p = new Piece(DepartJ1, DepartJ1.name);
         GameObjectDico.Add(DepartJ1.name, p);
@@ -102,6 +120,8 @@ public class Manager : MonoBehaviour {
         ArriveeJ2 = (GameObject) Instantiate(arrive, new Vector3((rowsAndColumnsNumber - 1), numArrivePlayer2, 0), Quaternion.identity);
         ArriveeJ1.name = "ArriveeJ1";
         ArriveeJ2.name = "ArriveeJ2";
+        ArriveeJ1.transform.parent = pieces.transform;
+        ArriveeJ2.transform.parent = pieces.transform;
 
 
         p = new Piece(ArriveeJ1, ArriveeJ1.name);
@@ -109,7 +129,7 @@ public class Manager : MonoBehaviour {
         p = new Piece(ArriveeJ2, ArriveeJ2.name);
         GameObjectDico.Add(ArriveeJ2.name, p);
 
-        int nbPiece = 0;
+        
 		for (int i = 0; i < rowsAndColumnsNumber; i++) 
 		{
 			for (int j = 0; j < rowsAndColumnsNumber; j++) 
@@ -120,19 +140,19 @@ public class Manager : MonoBehaviour {
                     if (j >= (rowsAndColumnsNumber / 2))
                     {
                         GameObject background = (GameObject)Instantiate(tileBackgroundJ1, new Vector3(i, j, 0), Quaternion.identity);
-                        background.transform.parent = parent.transform;
+                        background.transform.parent = pieces.transform;
                     }
                     else
                     {
                         GameObject background = (GameObject)Instantiate(tileBackgroundJ2, new Vector3(i, j, 0), Quaternion.identity);
-                        background.transform.parent = parent.transform;
+                        background.transform.parent = pieces.transform;
                     }
 
 
                     //Place pipes
                     GameObject piece = (GameObject)Instantiate(pipesArray[Random.Range(0, pipesArray.Length)], new Vector3(i, j, 0), Quaternion.identity);
                     piece.name += (nbPiece++);
-                    piece.transform.parent = parent.transform;
+                    piece.transform.parent = pieces.transform;
 
                     GameObjectDico.Add(piece.name, new Piece(piece, piece.name));
 
@@ -152,31 +172,115 @@ public class Manager : MonoBehaviour {
 	}
 
 	// TRAIL RENDERER MANAGEMENT
-	void addTrailRenderer()
+	public void addTrailRenderer()
 	{
 		if (whoseTurn == Turn.Player1) 
 		{
 			GameObject tempTrailRenderer1 = (GameObject)Instantiate(trailRendererObject, new Vector3(DepartJ1.transform.position.x, DepartJ1.transform.position.y, 0), Quaternion.identity);
+            tempTrailRenderer1.name = "Trail" + nbTrail++;
 			trailRendererPlayer1Array.Add(tempTrailRenderer1);
+            tempTrailRenderer1.transform.parent = trails.transform;
 		}
 		else
 		{
 			GameObject tempTrailRenderer2 = (GameObject)Instantiate(trailRendererObject, new Vector3(DepartJ2.transform.position.x, DepartJ2.transform.position.y, 0), Quaternion.identity);
+            tempTrailRenderer2.name = "Trail" + nbTrail++;
 			trailRendererPlayer2Array.Add(tempTrailRenderer2);
+            tempTrailRenderer2.transform.parent = trails.transform;
 		}
 	}
 
-	void moveTrailRenderer(Vector3 newPosition, int pathIndex)
+	public IEnumerator moveTrailRenderer(Vector3 newPosition, int pathIndex)
 	{
+        //if (moving) yield return new WaitForSeconds(0);
+        float duration = 0.9f; // duration of movement in seconds
 		if (whoseTurn == Turn.Player1) 
 		{
+            //Debug.Log("MOVE TURN 1");
+            moving = true; 
 			GameObject aTrailRenderer = trailRendererPlayer1Array[pathIndex] as GameObject;
-			aTrailRenderer.transform.position = newPosition;
+            Vector3 initPos = aTrailRenderer.transform.position;
+            for (float t = 0f; t < 1; )
+            {
+                t += Time.deltaTime / duration;
+                aTrailRenderer.transform.position = Vector3.Lerp(initPos, newPosition, t);
+                yield return new WaitForSeconds(0);
+            }
+            moving = false;
+
 		}
 		else
 		{
+            //Debug.Log("MOVE TURN 2");
 			GameObject aTrailRenderer = trailRendererPlayer2Array[pathIndex] as GameObject;
-			aTrailRenderer.transform.position = newPosition;
+            Vector3 initPos = aTrailRenderer.transform.position;
+            moving = true; 
+            for (float t = 0f; t < 1; )
+            {
+
+                t += Time.deltaTime / duration;
+                aTrailRenderer.transform.position = Vector3.Lerp(initPos, newPosition, t);
+                yield return new WaitForSeconds(0);
+            }
+            moving = false;
 		}
 	}
+
+    public int GetTrailRenderer(Vector3 vec, Piece piece)
+    {
+        ArrayList listTrail = new ArrayList();
+        listTrail.Clear();
+        if (whoseTurn == Turn.Player1) 
+		{
+            //Debug.Log("TURN 1");
+            for(int i = 0 ; i < trailRendererPlayer1Array.Count ; i++)
+            {
+                GameObject renderer = (GameObject)trailRendererPlayer1Array[i];
+                if (piece.gameObject.transform.position == renderer.transform.position)
+                {
+                    //StartCoroutine(Camera.main.GetComponent<Manager>().moveTrailRenderer(vec, i));
+
+                    //Debug.Log("Trail Name : " + renderer.name);
+                    return i;
+                }
+            }
+		}
+        else if (whoseTurn == Turn.Player2) 
+		{
+            //Debug.Log("TURN 2");
+            for (int i = 0; i < trailRendererPlayer2Array.Count; i++)
+            {
+                GameObject renderer = (GameObject)trailRendererPlayer2Array[i];
+                if (piece.gameObject.transform.position == renderer.transform.position)
+                {
+                    //StartCoroutine(Camera.main.GetComponent<Manager>().moveTrailRenderer(vec, i));
+                    //listTrail.Add(i);
+                    //Debug.Log("Trail Name : " + renderer.name);
+                    return i;
+                }
+            }
+		}
+        return -1;
+    }
+
+    public void EndGame()
+    {
+        endGame.GetComponent<GUIText>().text = "FIN DE LA PARTIE - " + whoseTurn.ToString() + " A GAGNE ";
+        Destroy(pieces);
+        Destroy(trails);
+    }
+
+    public void Retry()
+    {
+        nbPiece = 0;
+        GameEnd = false;
+        whoseTurn = Turn.Player1;
+        text.GetComponent<TextMesh>().text = whoseTurn.ToString();
+        endGame.GetComponent<GUIText>().text = "";
+        if(pieces)
+            Destroy(pieces);
+        if(trails)
+            Destroy(trails);
+        GenerateGrid();
+    }
 }

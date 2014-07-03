@@ -10,6 +10,11 @@ public class DragObject : MonoBehaviour {
 
     Piece pieceSwap;
     bool canConnected;
+
+    ArrayList listPieceColored = new ArrayList();
+
+    static bool firstTime = true;
+    //static GameObject goPieceActive;
 	// Use this for initialization
 	void Start () {
 		initialColor = this.renderer.material.color;
@@ -17,7 +22,23 @@ public class DragObject : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+        /*if (Camera.main.GetComponent<Manager>().validate)
+        {
+            SwapPosition();
+            Camera.main.GetComponent<Manager>().validate = false;
+        }
+        if (Camera.main.GetComponent<Manager>().cancel)
+        {
+            Camera.main.GetComponent<Manager>().pipeSelected.renderer.material.color = initialColor;
+            if (goPieceActive != null)
+            {
+                goPieceActive.transform.renderer.material.color = initialColor;
+                goPieceActive = null;
+            }
+            Camera.main.GetComponent<Manager>().pipeSelected = null;
+            Camera.main.GetComponent<Manager>().cancel = false;
+
+        }*/
 	}
 	
 	void OnMouseDown() 
@@ -30,6 +51,7 @@ public class DragObject : MonoBehaviour {
                 if (Camera.main.GetComponent<Manager>().pipeSelected == null)
                 {
                     //2eme piece 
+                    firstTime = true;
                     if (Camera.main.GetComponent<Manager>().whoseTurn == Manager.Turn.Player1)
                     {
                         if (this.transform.position.y >= (Camera.main.GetComponent<Manager>().rowsAndColumnsNumber / 2) && this.transform.position.y < (Camera.main.GetComponent<Manager>().rowsAndColumnsNumber))
@@ -62,8 +84,12 @@ public class DragObject : MonoBehaviour {
                         }
                     }
                 }
-                else if (Camera.main.GetComponent<Manager>().pipeSelected.transform.position != this.transform.position)
+                else if ((Camera.main.GetComponent<Manager>().pipeSelected.transform.position != this.transform.position) && firstTime)
                 {
+                    firstTime = false;
+                    //goPieceActive = this.gameObject;
+                    //goPieceActive.transform.renderer.material.color = Color.black;
+
                     SwapPosition();
                 }
             }
@@ -101,20 +127,53 @@ public class DragObject : MonoBehaviour {
 //		transform.position = curPosition;
 //	}
 
-	void SwapPosition()
+    void DrawTrail()
+    {
+        ArrayList  list = new ArrayList();
+        foreach(Piece p in listPieceColored)
+        {
+            list.Add(Camera.main.GetComponent<Manager>().GetTrailRenderer(this.transform.position, p));
+        }
+       int i = 0;
+       //Debug.Log(" list.Count : (nbTrail) " + list.Count);
+
+       StartCoroutine(Camera.main.GetComponent<Manager>().moveTrailRenderer(this.transform.position, (int)list[i]));
+      /* while(i < list.Count)
+       {
+           if(!Camera.main.GetComponent<Manager>().moving)
+           {
+                StartCoroutine(Camera.main.GetComponent<Manager>().moveTrailRenderer(this.transform.position,(int) list[i]));
+                i++;
+           }
+           //StartCoroutine(Camera.main.GetComponent<Manager>().moveTrailRenderer(this.transform.position, (int)list[i]));
+       }*/
+
+       listPieceColored.Clear();
+       //goPieceActive = null;
+        /*if (a != -1)
+        {
+            StartCoroutine(Camera.main.GetComponent<Manager>().moveTrailRenderer(this.transform.position, a));
+            //Camera.main.GetComponent<Manager>().moveTrailRenderer(this.transform.position, a);
+        }*/
+    }
+
+
+	void SwapPosition( )
 	{
-		Vector3 tempPosition = this.transform.position;
-		this.transform.position = Camera.main.GetComponent<Manager> ().pipeSelected.transform.position;
+        Vector3 tempPosition = this.transform.position;
+        this.transform.position = Camera.main.GetComponent<Manager>().pipeSelected.transform.position;
 
         Camera.main.GetComponent<Manager>().GameObjectDico.TryGetValue(this.name, out pieceSwap);
 
         // CHANGE TURN PLAYER AND SET THE OBJECT COLOR FOR EACH PLAYER
         if (Camera.main.GetComponent<Manager>().whoseTurn == Manager.Turn.Player1)
         {
-            canConnected = CheckConnected(pieceSwap, Color.green);
-             if (canConnected)
+            CheckConnected(pieceSwap, Color.green);
+            if (listPieceColored.Count > 0)
              {
-                this.renderer.material.color = Color.green;
+                 //Debug.Log(" listPieceColored.Count " + listPieceColored.Count);
+                 DrawTrail();
+                 this.transform.renderer.material.color = Color.green;
                 locked = true;
              }
              Camera.main.GetComponent<Manager>().pipeSelected.transform.position = tempPosition;
@@ -124,9 +183,11 @@ public class DragObject : MonoBehaviour {
         }
         else
         {
-            canConnected = CheckConnected(pieceSwap, Color.blue);
-             if (canConnected)
+            CheckConnected(pieceSwap, Color.blue);
+            if (listPieceColored.Count > 0)
              {
+                 //Debug.Log(" listPieceColored.Count " + listPieceColored.Count);
+                 DrawTrail();
                  this.renderer.material.color = Color.blue;
                  locked = true;
              }
@@ -139,14 +200,21 @@ public class DragObject : MonoBehaviour {
         Camera.main.GetComponent<Manager>().pipeSelected = null;
 	}
 
-    bool CheckConnected(Piece pieceActual,Color c)
+    void CheckConnected(Piece pieceActual,Color c)
     {
         Piece piece;
+        //bool Ok = false;
+
         for (int x = ((int)pieceActual.gameObject.transform.position.x-1); x < (pieceActual.gameObject.transform.position.x + 2); x += 2)
         {
             piece = GetGameObjectByPosition(new Vector3(x, pieceActual.gameObject.transform.position.y, 0));
-            if ((piece != null) && (piece.gameObject.renderer.material.color == c || piece.gameObject.name.Contains("Depart") || piece.gameObject.name.Contains("Arrivée")))
+            if ((piece != null) && (piece.gameObject.renderer.material.color == c || piece.gameObject.name.Contains("Depart") || piece.gameObject.name.Contains("Arrivee")))
             {
+                //Debug.Log("Piece Voisine : " + piece.gameObject.name);
+                if (piece.gameObject.name.Contains("Depart"))
+                {
+                    Camera.main.GetComponent<Manager>().addTrailRenderer();
+                }
                 //Horizontal
                 if (piece.gameObject.transform.position.y == pieceActual.gameObject.transform.position.y)
                 {
@@ -155,8 +223,16 @@ public class DragObject : MonoBehaviour {
                     {
                         if (piece.asLeft && pieceActual.asRight)
                         {
+                            if (piece.gameObject.name.Contains("Arrivee"))
+                            {
+                                Camera.main.GetComponent<Manager>().GameEnd = true;
+                                Camera.main.GetComponent<Manager>().EndGame();
+                            }
+                            //DrawTrail(piece);
+                            listPieceColored.Add(piece);
+                            //Ok = true;
                             //Debug.Log("Connexion Possible entre " + piece.gameObject.name + " et " + pieceActual.gameObject.name);
-                            return true;
+                            //return true;
                         }
                     }
                     //pieceActual à droite par rapport à la piece précedente 
@@ -164,8 +240,15 @@ public class DragObject : MonoBehaviour {
                     {
                         if (piece.asRight && pieceActual.asLeft)
                         {
+                            if (piece.gameObject.name.Contains("Arrivee"))
+                            {
+                                Camera.main.GetComponent<Manager>().GameEnd = true;
+                                Camera.main.GetComponent<Manager>().EndGame();
+                            }
+                            listPieceColored.Add(piece);
+                            //DrawTrail(piece);
                             //Debug.Log("Connexion Possible entre " + piece.gameObject.name + " et " + pieceActual.gameObject.name);
-                            return true;
+                            //return true;
                         }
                     }
                 }
@@ -178,6 +261,11 @@ public class DragObject : MonoBehaviour {
             piece = GetGameObjectByPosition(new Vector3(pieceActual.gameObject.transform.position.x, y, 0));
             if ((piece != null) && (piece.gameObject.renderer.material.color == c || piece.gameObject.name.Contains("Depart") || piece.gameObject.name.Contains("Arrivee")))
             {
+                //Debug.Log("Piece Voisine : " + piece.gameObject.name);
+                if (piece.gameObject.name.Contains("Depart"))
+                {
+                    Camera.main.GetComponent<Manager>().addTrailRenderer();
+                }
                 //Vertical
                 if (piece.gameObject.transform.position.x == pieceActual.gameObject.transform.position.x)
                 {
@@ -186,8 +274,15 @@ public class DragObject : MonoBehaviour {
                     {
                         if (piece.asBot && pieceActual.asTop)
                         {
+                            //DrawTrail(piece);
+                            if (piece.gameObject.name.Contains("Arrivee"))
+                            {
+                                Camera.main.GetComponent<Manager>().GameEnd = true;
+                                Camera.main.GetComponent<Manager>().EndGame();
+                            }
+                            listPieceColored.Add(piece);
                             //Debug.Log("Connexion Possible entre " + piece.gameObject.name + " et " + pieceActual.gameObject.name);
-                            return true;
+                            //return true;
                         }
                     }
                     //pieceActual en haut par rapport à la piece précedente 
@@ -195,16 +290,21 @@ public class DragObject : MonoBehaviour {
                     {
                         if (piece.asTop && pieceActual.asBot)
                         {
+                            //DrawTrail(piece);
+                            if (piece.gameObject.name.Contains("Arrivee"))
+                            {
+                                Camera.main.GetComponent<Manager>().GameEnd = true;
+                                Camera.main.GetComponent<Manager>().EndGame();
+                            }
+                            listPieceColored.Add(piece);
                             //Debug.Log("Connexion Possible entre " + piece.gameObject.name + " et " + pieceActual.gameObject.name);
-                            return true;
+                            //return true;
                         }
                     }
 
                 }
             }
         }
-
-        return false;
     }
 
     Piece GetGameObjectByPosition(Vector3 v)
